@@ -441,31 +441,3 @@ if __name__ == "__main__":
    
     ''' Defining the parameters for the model '''
     main()    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
