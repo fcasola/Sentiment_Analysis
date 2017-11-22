@@ -1,6 +1,8 @@
 """
 @author: Francesco Casola, Harvard University
 fr.casola@gmail.com
+
+Training module for the NLP analysis of Amazon reviews
 """
 # run nltk.download() to install all corpora dependencies
 from nltk.corpus import stopwords 
@@ -80,8 +82,9 @@ def cleaning_doc(list_doc):
     # additional english expressions like
     # saxon genitive, name with initials, dashes etc..
     lookup = {'\\\'s\s': ' ','\s\w{1}\s\.' : ' ', '--' : ' ', '-' : ' ', '\\\'em\s': ' ', \
-              'i\'d': ' ','\"\w+\'\"': '', '\n': '', "\.\s": ' '}    
-    print('Removing the noise from the text. Pls. wait..')
+              'i\'d': ' ','\"\w+\'\"': '', '\n': '', "\.\s": ' '}  
+    if __name__ == "__main__":
+        print('Removing the noise from the text. Pls. wait..')
     # Start to lemmatize
     lemma = WordNetLemmatizer()
     # Iterate over the sentences
@@ -105,7 +108,8 @@ def cleaning_doc(list_doc):
         cleaned_str = [lemma.lemmatize(word) for word in cleaned_str]
         # store the changes in the mutable list
         list_doc[numSent] = ' '.join(cleaned_str).strip()
-    print('Done!')    
+    if __name__ == "__main__":
+        print('Done!')    
 
 def Word_representation(dataset_A,dataset_B,Use_dense_rep,tfIdf,siteWord2vec,filename,pathgraph):        
     '''
@@ -343,9 +347,8 @@ def evaluate_accuracy(path_model,pathgraph,X_validation,X_training,Y_labels,y_te
     
 def main():
     '''    
-    Main Module for NLP sentiment analysis.   
-    Addresses the 'Amazon Reviews for Sentiment Analysis' problem, see:
-        https://www.kaggle.com/bittlingmayer/amazonreviews
+    This Main module creates the NN model using user-defined parameters and
+    runs the training.
     '''
     
    
@@ -442,7 +445,7 @@ def main():
         
 if __name__ == "__main__":
     '''    
-    Module for NLP sentiment analysis.   
+    Module for NLP sentiment analysis. Training part.  
     Addresses the 'Amazon Reviews for Sentiment Analysis' problem, see:
         https://www.kaggle.com/bittlingmayer/amazonreviews
     '''
