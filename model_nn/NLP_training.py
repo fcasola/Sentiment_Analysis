@@ -2,7 +2,7 @@
 @author: Francesco Casola, Harvard University
 fr.casola@gmail.com
 """
-
+# run nltk.download() to install all corpora dependencies
 from nltk.corpus import stopwords 
 from nltk.stem.wordnet import WordNetLemmatizer
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -48,7 +48,7 @@ def Loading_dataset(path_training,path_test,N_max_train_test):
                     warnings.warn("Review contains no label!")
     print('Done!')    
     # test
-    print('Loading test dataset')
+    print('Loading validation dataset')
     with bz2.open(path_test, "rt", encoding = "UTF-8") as bz_file:
         for i,Sent in enumerate(bz_file):
             if i>=N_max_train_test[1]:
@@ -313,7 +313,7 @@ def main():
     '''
     
    
-    ''' Defining the parameters for the model '''    
+    ''' Defining all the parameters for the model '''    
     # dataset - path to the positive and negative examples
     ## the training dataset contains 3.6M reviews for training
     dataset_train_path = '../data/Training/train.ft.txt.bz2'
@@ -365,7 +365,7 @@ def main():
     
     ''' Creating a representation for the training vectors and the target labels '''
     # Fullname of the Google Word2Vec dataset
-    print('Creating a representation for the training vectors and the target labels')    
+    print('Creating a vectorial representation for the reviews used for training')    
     fullfilename = os.path.join(Dest_fold_dwl, 'GoogleNews-vectors-negative300.bin.gz')
 
     # Construct a vector representation for each review
@@ -422,10 +422,10 @@ def main():
         print('Accuracy on the validation set for the NN model is %4.1f %%'%(100*accuracy))
 
 
-    ### try once more logistic regression
-    print('Comparing the model with a simple logistic regression in sklearn')    
+    ### compare with standard logistic regression
+    print(15*'-','\n','Comparing the model with a simple logistic regression in sklearn')    
     logreg = sklr.LogisticRegression(max_iter=200)
-    model_LR = logreg.fit(X_training,Y_labels)
+    model_LR = logreg.fit(X_training,Y_labels.reshape(-1,))
     # evaluate accuracy
     valp = model_LR.predict(X_validation)
     print('Accuracy on the validation set for the logistic regression model is %4.1f %%'%(100*np.mean((valp.reshape(-1,1)==y_compare).astype(int))))        
