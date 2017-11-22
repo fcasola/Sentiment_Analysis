@@ -21,7 +21,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 def Loading_dataset(path_training,path_test,N_max_train_test):
     '''
     Module for loading the dataset
-
     '''
     # loading dataset...
     # initialize positive and negative sentences 
@@ -29,8 +28,7 @@ def Loading_dataset(path_training,path_test,N_max_train_test):
     sent_train = []
     sent_test = []
     y_train = []
-    y_test = []
-    
+    y_test = []   
     # training
     print('Loading training dataset')
     with bz2.open(path_training, "rt", encoding = "UTF-8") as bz_file:
