@@ -282,13 +282,9 @@ def run_training(loss,optimizer,init,x,y,X_training,Y_labels,Training_parameters
                 # shuffle data at each loop
                 shuffle_dts = rng.choice(X_training.shape[0],batch_size)                
                 # initializing the input batch
-                #batch_featurs = X_training[i*batch_size: \
-                #                    (i+1)*batch_size]
                 batch_featurs = X_training[shuffle_dts]
                 batch_featurs = np.float32(batch_featurs)
                 # initializing the target
-                #batch_labls = Y_labels[i*batch_size: \
-                #                    (i+1)*batch_size]    
                 batch_labls = Y_labels[shuffle_dts]    
                 batch_labls = np.float32(batch_labls)
                 # convert logits for 2 classes instead of 1
