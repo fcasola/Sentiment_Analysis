@@ -5,8 +5,11 @@ fr.casola@gmail.com
 Prediction module for the NLP analysis of Amazon reviews
 """
 import tensorflow as tf
-import numpy as np, h5py, os, NLP_training
+import numpy as np, h5py, os
 from collections import Counter
+# personal modules
+import NLP_training
+from NLP_config import *
 
 def load_from_hdf5(filename):
     """
@@ -99,8 +102,8 @@ def main():
     
     '''Define parameters for the prediction'''
     # path and filename where the training model will be saved
-    path_model = '../data/model/model_nn'
-    pathgraph = '../data/model/' 
+    path_model = NLP_dic['path_model']   
+    pathgraph = NLP_dic['pathgraph'] 
     file_vocabulary = os.path.join(pathgraph,'dictionary_model.h5')
     file_model = path_model+'.meta'
     

@@ -16,6 +16,8 @@ import numpy as np
 from collections import Counter
 # comparing the model with a standard logistic regression in sklearn
 import sklearn.linear_model as sklr
+# personal modules
+from NLP_config import *
 
 # Reduce verbosity of tensorflow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -350,45 +352,46 @@ def main():
     This Main module creates the NN model using user-defined parameters and
     runs the training.
     '''
-    
    
-    ''' Defining all the parameters for the model '''    
+    ''' Defining all the parameters for the model 
+        We load them from the configuration file
+    '''    
     # dataset - path to the positive and negative examples
     ## the training dataset contains 3.6M reviews for training
-    dataset_train_path = '../data/Training/train.ft.txt.bz2'
+    dataset_train_path = NLP_dic['dataset_train_path']
     ## the test dataset contains 400K reviews for training
-    dataset_test_path = '../data/Training/test.ft.txt.bz2'
+    dataset_test_path = NLP_dic['dataset_train_path']
     # Specify the #of reviews from the training and test dataset to be retained
-    N_max_train_test = [2e4,1e4]
+    N_max_train_test = list(map(int,NLP_dic['N_max_train_test']))
 
     # defining word representation
     # decide whether you want to use a dense or a 1-hot representation
     # the dense representation is the Google Word2Vec pretrained dictionary
-    Use_dense_rep = True
+    Use_dense_rep = NLP_dic['Use_dense_rep']
     # If Word2Vec is not used,
     # decide whether you want to count words using tfIdf or simply 1-hot
-    tfIdf = False        
+    tfIdf = NLP_dic['tfIdf']        
     # url to file containing pretrained word2vec representation
-    website_pretrained_Word2vec = 'https://s3.amazonaws.com/dl4j-distribution/GoogleNews-vectors-negative300.bin.gz'
+    website_pretrained_Word2vec = NLP_dic['website_pretrained_Word2vec']
     # destination folder to download the Word2Vec representation (if needed), or path where to find the file
-    Dest_fold_dwl = 'E:/' 
+    Dest_fold_dwl = NLP_dic['Dest_fold_dwl']   
 
     # defining net and training parameters
     # CPU/GPU platform on which the training should be running
-    device_name = '/cpu:0'
+    device_name = NLP_dic['device_name']   
     # path and filename where the training model will be saved
-    path_model = '../data/model/model_nn'
-    pathgraph = '../data/model/' 
+    path_model = NLP_dic['path_model']   
+    pathgraph = NLP_dic['pathgraph']   
     
     
     # Define the net geometry: dimension of each layer
     # Dimension of the hidden layer: specify how deep (# of elements in the list) and how
     # wide (value of the elements in the list). If empty, the model will coincide with log-regression
-    Dim_hidden = []
+    Dim_hidden = list(map(int,NLP_dic['Dim_hidden']))
     # Define the learning rate and other parameters
-    learning_rate = 0.04
-    epochs = 20
-    batch_size = 128   
+    learning_rate = NLP_dic['learning_rate']   
+    epochs = int(NLP_dic['epochs'])
+    batch_size = int(NLP_dic['batch_size'])
     
     
     ''' Loading the dataset and cleaning the noise '''
