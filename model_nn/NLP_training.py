@@ -397,8 +397,11 @@ def main():
     ''' Loading the dataset and cleaning the noise '''
     # Loading the dataset and assigning labels        
     print('*Loading the dataset and cleaning the noise*')
-    sent_train,sent_test,y_train,y_test = Loading_dataset(dataset_train_path,dataset_test_path,N_max_train_test)
-    
+    if os.path.exists(dataset_train_path) and os.path.exists(dataset_test_path):
+        sent_train,sent_test,y_train,y_test = Loading_dataset(dataset_train_path,dataset_test_path,N_max_train_test)
+    else:
+        kagsite = 'https://www.kaggle.com/bittlingmayer/amazonreviews'
+        raise Exception('Missing training dataset; download them from '+kagsite)      
     
     # Text cleaning: noise removal
     cleaning_doc(sent_train)
