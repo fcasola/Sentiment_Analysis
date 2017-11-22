@@ -52,14 +52,16 @@ git clone https://github.com/fcasola/Sentiment_Analysis
 ```
 In order to perform a full training of the neural net, after making sure of having all datasets available, type:
 ```
-python model_nn/NLP_training.py
+cd Sentiment_Analysis/model_nn/
+python NLP_training.py
 ```
 At the moment, this Git version contains a pre-trained model, highly NOT optimized and featuring no hidden layers. This geometry makes the model similar to a standard logistic regression, to which (sklearn one) it is compared at the end of the training (i.e. the accuracy on the validation set is printed out to screen).
 The training will also save the loss vs epoch time under the training_Loss.h5 file in the data/model folder.
 
 Once a model is available in the data/model folder, an interactive console can be launched by typing:
 ```
-python model_nn/NLP_prediction.py
+cd Sentiment_Analysis/model_nn/
+python NLP_prediction.py
 ```
 The code will load the trained model and a smaller version of the Word2Vec database (only the part used during training).
 As the screenshot below shows, the program will now ask to type a review and will try to judge the quality of the product that you bought:
