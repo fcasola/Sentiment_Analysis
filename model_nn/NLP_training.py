@@ -304,6 +304,42 @@ def run_training(loss,optimizer,init,x,y,X_training,Y_labels,Training_parameters
         saver.save(sess,path_model)   
         print('Training complete!')    
 
+def evaluate_accuracy(path_model,pathgraph,X_validation,X_training,Y_labels,y_test):
+    '''
+    Module to evaluate the accuracy after training and compare it with logistic regression
+    '''
+    ### check which prediction went well and which went bad
+    # restoring the model
+    print('Loading the model..')
+    tf.reset_default_graph() 
+    with tf.Session() as sess:
+        sess = tf.Session()
+        meta_file = path_model+'.meta'
+        saver = tf.train.import_meta_graph(meta_file, clear_devices=True)
+        # load the parameters for the trained graph
+        saver.restore(sess, tf.train.latest_checkpoint(pathgraph))
+        # collecting net output
+        output_fn = tf.get_collection("output_net")[0]
+        # feeding dictionary      
+        feed_dict={'input_net:0': X_validation}
+        y_compare = np.array(y_test).reshape(-1,1) 
+        # argmax 0/1 selects 1st/2nd column
+        outbasedonin = 1 - sess.run(tf.argmax(output_fn,1), feed_dict = feed_dict)
+        # evaluate the accuracy        
+        accuracy = np.mean((outbasedonin.reshape(-1,1)==y_compare).astype(int))
+        print('Accuracy on the validation set for the NN model is %4.1f %%'%(100*accuracy))
+
+
+    ### compare with standard logistic regression
+    print(15*'-','\n','Comparing the model with a simple logistic regression in sklearn')    
+    logreg = sklr.LogisticRegression(max_iter=200)
+    model_LR = logreg.fit(X_training,Y_labels.reshape(-1,))
+    # evaluate accuracy
+    valp = model_LR.predict(X_validation)
+    print('Accuracy on the validation set for the logistic regression model is %4.1f %%'%(100*np.mean((valp.reshape(-1,1)==y_compare).astype(int))))        
+    
+
+
 
 def main():
     '''    
@@ -381,6 +417,8 @@ def main():
     Training_parameters = [epochs,batch_size]
     # Define the net geometry
     Dim_net = [X_training.shape[1]]+Dim_hidden+[2]   
+    print('The NN has the following width at each layer','\n')
+    print(Dim_net)
     
     # Creating the NN model
     print('\n1/2 - Creating the nn model.')    
@@ -400,37 +438,9 @@ def main():
 
     ''' Printing out the model accuracy '''   
     print(15*'-','\n','Evaluating the model accuracy')     
-    ### check which prediction went well and which went bad
-    # restoring the model
-    print('Loading the model..')
-    tf.reset_default_graph() 
-    with tf.Session() as sess:
-        sess = tf.Session()
-        meta_file = path_model+'.meta'
-        saver = tf.train.import_meta_graph(meta_file, clear_devices=True)
-        # load the parameters for the trained graph
-        saver.restore(sess, tf.train.latest_checkpoint(pathgraph))
-        # collecting net output
-        output_fn = tf.get_collection("output_net")[0]
-        # feeding dictionary      
-        feed_dict={'input_net:0': X_validation}
-        y_compare = np.array(y_test).reshape(-1,1) 
-        # argmax 0/1 selects 1st/2nd column
-        outbasedonin = 1 - sess.run(tf.argmax(output_fn,1), feed_dict = feed_dict)
-        # evaluate the accuracy        
-        accuracy = np.mean((outbasedonin.reshape(-1,1)==y_compare).astype(int))
-        print('Accuracy on the validation set for the NN model is %4.1f %%'%(100*accuracy))
-
-
-    ### compare with standard logistic regression
-    print(15*'-','\n','Comparing the model with a simple logistic regression in sklearn')    
-    logreg = sklr.LogisticRegression(max_iter=200)
-    model_LR = logreg.fit(X_training,Y_labels.reshape(-1,))
-    # evaluate accuracy
-    valp = model_LR.predict(X_validation)
-    print('Accuracy on the validation set for the logistic regression model is %4.1f %%'%(100*np.mean((valp.reshape(-1,1)==y_compare).astype(int))))        
-
-
+    evaluate_accuracy(path_model,pathgraph,X_validation,X_training,Y_labels,y_test)
+    
+    
 
 if __name__ == "__main__":
     '''    
