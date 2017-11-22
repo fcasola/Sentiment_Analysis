@@ -7,6 +7,7 @@ from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 import string, re, os, h5py, urllib, progressbar, bz2, warnings
+warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
 import tensorflow as tf
 import gensim as gs
 import numpy as np
@@ -16,7 +17,6 @@ import sklearn.linear_model as sklr
 
 # Reduce verbosity of tensorflow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
 
 def Loading_dataset(path_training,path_test,N_max_train_test):
     '''
@@ -66,7 +66,6 @@ def Loading_dataset(path_training,path_test,N_max_train_test):
     # return data
     return sent_train,sent_test,y_train,y_test
 
-
 def cleaning_doc(list_doc):
     '''
     Module for noise removal and text cleaning:
@@ -110,9 +109,7 @@ def cleaning_doc(list_doc):
         list_doc[numSent] = ' '.join(cleaned_str).strip()
     print('Done!')    
 
-
-
-def Word_representation(dataset_A,dataset_B,Use_dense_rep,tfIdf,siteWord2vec,filename):        
+def Word_representation(dataset_A,dataset_B,Use_dense_rep,tfIdf,siteWord2vec,filename,pathgraph):        
     '''
     Module to create a vectorial representation for the training data    
     
@@ -123,20 +120,22 @@ def Word_representation(dataset_A,dataset_B,Use_dense_rep,tfIdf,siteWord2vec,fil
             If False, pls specify whether to use tfIdf for counting or not.
         -siteWord2vec: site where to find the Word2Vec file (if needed)
         -filename: full filename where to find the Word2Vec file on the local drive
+        -pathgraph: A full dictionary is saved at destination pathgraph for later use in prediction
     '''
     # We start creating a comprehensive review list
     tot_list_data = [doc.split() for doc in dataset_A+dataset_B]
     # Creating labels
     N_A = len(dataset_A)
     N_B = len(dataset_B)
-    
+    # Representation of the dictionary in vectorial form
+    Dictionary_rep = {}
     ## loading dense representation
     model = None        
     if Use_dense_rep:
         # check if google Word2Vec file exists
         if os.path.isfile(filename.strip()): 
             # loading the representation 
-            print('Loading the Word2Vec database. Needs a 64 bit Python version')
+            print('Loading the Word2Vec database (1.5Gb file!). Needs a 64 bit Python version')
             model = gs.models.KeyedVectors.load_word2vec_format(filename, binary=True)  
             print('Done')
         else:            
@@ -156,8 +155,9 @@ def Word_representation(dataset_A,dataset_B,Use_dense_rep,tfIdf,siteWord2vec,fil
         for i,Sent in enumerate(dataset_A+dataset_B):
             for word in Sent.split(' '):
                 counts_tot[word]+=1
-                if word.replace("'",'') in word_vectors.vocab:
-                    X_training[i,:] = np.add(X_training[i,:], model[word.replace("'",'')])            
+                if word in word_vectors.vocab:
+                    Dictionary_rep[word] = model[word]
+                    X_training[i,:] = np.add(X_training[i,:], model[word])            
                 else:
                     counts_mis[word]+=1
         print('Training matrix created. %d words out of %d were not in Google dictionary'%(len(counts_mis),len(counts_tot)))
@@ -165,23 +165,35 @@ def Word_representation(dataset_A,dataset_B,Use_dense_rep,tfIdf,siteWord2vec,fil
         if tfIdf:
             # using Tfid to count occurrencies
             print('Building the training matrix')
-            obj = TfidfVectorizer()
-            corpus = dataset_A+dataset_B
-            X_training = obj.fit_transform(corpus)
-            X_training = X_training.todense()
-            print('Done')
+            try:
+                obj = TfidfVectorizer()
+                corpus = dataset_A+dataset_B
+                X_training = obj.fit_transform(corpus)
+                X_training = X_training.todense()
+                print('Done')
+            except:
+                raise Exception('Sparse dictionary representation too big, use a dense one!')                
         else:
             # build a vocabulary
             print('Building a vocabulary')
             dictionary = gs.corpora.Dictionary(tot_list_data)         
             #construct 1-hot vectors starting from a   
             newdic = dict((v, k) for k, v in dict(dictionary).items())
-            X_training = np.zeros((N_A+N_B,len(newdic)))
-            print('Building the training matrix')
-            for i,j in enumerate(tot_list_data):
-                for p in j:
-                    X_training[i,newdic[p]] += 1   
-            print('Done')
+            try:
+                X_training = np.zeros((N_A+N_B,len(newdic)))
+                print('Building the training matrix')
+                for i,j in enumerate(tot_list_data):
+                    for p in j:
+                        onehotvec = np.zeros((len(newdic)))
+                        onehotvec[newdic[p]] = 1
+                        Dictionary_rep[p] = onehotvec
+                        X_training[i,newdic[p]] += 1   
+                print('Done')
+            except:
+                raise Exception('Sparse dictionary representation too big, use a dense one!')                                
+    # Save the dictionary to file for use during prediction
+    print('Saving a smaller dictionary to file for use at prediction time.')
+    save_to_hdf5(Dictionary_rep,  os.path.join(pathgraph,'dictionary_model.h5'))            
     # return the training matrix 
     return X_training[0:N_A],X_training[N_A:]
 
@@ -206,7 +218,6 @@ def save_dict_contents(h5file, path, dic):
             h5file[path + key] = item
         else:
             raise ValueError('Cannot save %s type'%type(item))
-
 
 def neural_net_model(Dim_net,learning_rate):
     '''
@@ -247,7 +258,6 @@ def neural_net_model(Dim_net,learning_rate):
 
     # return network parameters
     return (loss,optimizer,init,x,y)    
-
 
 def run_training(loss,optimizer,init,x,y,X_training,Y_labels,Training_parameters,path_model,session_datafile,rng):
     '''
@@ -300,7 +310,7 @@ def run_training(loss,optimizer,init,x,y,X_training,Y_labels,Training_parameters
             costv.append(avg_cost)           
         print('Saving training model and loss.')
         Loss_dic={"loss":np.array(costv)}
-        save_to_hdf5(Loss_dic,  session_datafile + 'training_Loss.h5')
+        save_to_hdf5(Loss_dic, os.path.join(session_datafile,'training_Loss.h5'))
         saver.save(sess,path_model)   
         print('Training complete!')    
 
@@ -329,7 +339,6 @@ def evaluate_accuracy(path_model,pathgraph,X_validation,X_training,Y_labels,y_te
         accuracy = np.mean((outbasedonin.reshape(-1,1)==y_compare).astype(int))
         print('Accuracy on the validation set for the NN model is %4.1f %%'%(100*accuracy))
 
-
     ### compare with standard logistic regression
     print(15*'-','\n','Comparing the model with a simple logistic regression in sklearn')    
     logreg = sklr.LogisticRegression(max_iter=200)
@@ -338,9 +347,6 @@ def evaluate_accuracy(path_model,pathgraph,X_validation,X_training,Y_labels,y_te
     valp = model_LR.predict(X_validation)
     print('Accuracy on the validation set for the logistic regression model is %4.1f %%'%(100*np.mean((valp.reshape(-1,1)==y_compare).astype(int))))        
     
-
-
-
 def main():
     '''    
     Main Module for NLP sentiment analysis.   
@@ -390,7 +396,7 @@ def main():
     
     ''' Loading the dataset and cleaning the noise '''
     # Loading the dataset and assigning labels        
-    print('Loading the dataset and cleaning the noise')
+    print('*Loading the dataset and cleaning the noise*')
     sent_train,sent_test,y_train,y_test = Loading_dataset(dataset_train_path,dataset_test_path,N_max_train_test)
     
     
@@ -401,23 +407,23 @@ def main():
     
     ''' Creating a representation for the training vectors and the target labels '''
     # Fullname of the Google Word2Vec dataset
-    print('Creating a vectorial representation for the reviews used for training')    
+    print('*Creating a vectorial representation for the reviews used for training*')    
     fullfilename = os.path.join(Dest_fold_dwl, 'GoogleNews-vectors-negative300.bin.gz')
 
     # Construct a vector representation for each review
     X_training,X_validation = Word_representation(sent_train,sent_test,Use_dense_rep,tfIdf, \
-                                              website_pretrained_Word2vec,fullfilename)    
+                                              website_pretrained_Word2vec,fullfilename,pathgraph)    
     
     
     ''' Creating the neural net model '''
-    print('Creating the neural net model')
+    print('*Creating the neural net model*')
     # random seed and function to shuffle dataset at each batch loop
     seed2 = 228
     rng = np.random.RandomState(seed2)
     Training_parameters = [epochs,batch_size]
     # Define the net geometry
     Dim_net = [X_training.shape[1]]+Dim_hidden+[2]   
-    print('The NN has the following width at each layer','\n')
+    print('*The NN has the following width at each layer*','\n')
     print(Dim_net)
     
     # Creating the NN model
@@ -437,11 +443,9 @@ def main():
 
 
     ''' Printing out the model accuracy '''   
-    print(15*'-','\n','Evaluating the model accuracy')     
+    print(15*'-','\n','*Evaluating the model accuracy*')     
     evaluate_accuracy(path_model,pathgraph,X_validation,X_training,Y_labels,y_test)
-    
-    
-
+        
 if __name__ == "__main__":
     '''    
     Module for NLP sentiment analysis.   
