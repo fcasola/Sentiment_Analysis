@@ -46,6 +46,10 @@ def check_voc_avail(filename):
 def convert_review(review,Vector_Vocab):
     '''
     Convert the review from text to vector
+    
+    convert_review(review,Vector_Vocab)
+        -review: review to be converted
+        -Vector_Vocab: reduced vocabulary to be used
     '''    
     main_text_rev = [review]
     # cleaning the text

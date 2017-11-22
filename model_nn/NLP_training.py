@@ -27,7 +27,7 @@ def Loading_dataset(path_training,path_test,N_max_train_test):
     Module for loading the dataset
     '''
     # loading dataset...
-    # initialize positive and negative sentences 
+    # initialize training and validation reviews
     label_dic = {0: '__label__1',1: '__label__2'}
     sent_train = []
     sent_test = []
@@ -49,7 +49,7 @@ def Loading_dataset(path_training,path_test,N_max_train_test):
                 else:
                     warnings.warn("Review contains no label!")
     print('Done!')    
-    # test
+    # validation
     print('Loading validation dataset')
     with bz2.open(path_test, "rt", encoding = "UTF-8") as bz_file:
         for i,Sent in enumerate(bz_file):
@@ -86,6 +86,7 @@ def cleaning_doc(list_doc):
     lookup = {'\\\'s\s': ' ','\s\w{1}\s\.' : ' ', '--' : ' ', '-' : ' ', '\\\'em\s': ' ', \
               'i\'d': ' ','\"\w+\'\"': '', '\n': '', "\.\s": ' '}  
     if __name__ == "__main__":
+        # we ask to wait only when the big dataset is loaded
         print('Removing the noise from the text. Pls. wait..')
     # Start to lemmatize
     lemma = WordNetLemmatizer()
@@ -226,6 +227,10 @@ def save_dict_contents(h5file, path, dic):
 def neural_net_model(Dim_net,learning_rate):
     '''
     Module defining the model for the neural net
+    
+    neural_net_model(Dim_net,learning_rate)
+        -Dim_net: list specifying size and dimension of the hidden layers
+        -learning_rate: learning rate
     '''
     seed = 128
     
@@ -266,6 +271,14 @@ def neural_net_model(Dim_net,learning_rate):
 def run_training(loss,optimizer,init,x,y,X_training,Y_labels,Training_parameters,path_model,session_datafile,rng):
     '''
     Module running the training   
+    
+    run_training(loss,optimizer,init,x,y,X_training,Y_labels,Training_parameters,path_model,session_datafile,rng)
+        - loss, optimizer, init,x,y: parameters and placeholders resulting from the net definition
+        - X_training,Y_labels: training dataset
+        - Training_parameters: list containing epochs and batch size
+        - path_model: path for the model and filename
+        - session_datafile: path where model is saved
+        - rng: numpy function to randomize the batch
     '''    
     # Saving the loss  
     costv=[]
