@@ -56,7 +56,7 @@ def convert_review(review,Vector_Vocab):
     # Initialize the training vector
     vec_size = max(Vector_Vocab[list(Vector_Vocab.keys())[0]].shape)
     X_training = np.zeros((1,vec_size))
-    for word in review.split(): 
+    for word in main_text_rev[0].split(): 
         counts_tot[word]+=1
         if word in Vector_Vocab:
             X_training[0,:] = np.add(X_training[0,:], Vector_Vocab[word].reshape(1,-1))  
