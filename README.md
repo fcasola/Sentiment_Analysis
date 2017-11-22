@@ -50,7 +50,7 @@ First, do:
 ```
 git clone https://github.com/fcasola/Sentiment_Analysis 
 ```
-In order to perform a full training of the neural net, after making sure of having all datasets available, type:
+In order to perform a full training of the neural net, __after making sure of having all datasets available__, type:
 ```
 cd Sentiment_Analysis/model_nn/
 python NLP_training.py
@@ -58,7 +58,7 @@ python NLP_training.py
 At the moment, this Git version contains a pre-trained model, highly NOT optimized and featuring no hidden layers. This geometry makes the model similar to a standard logistic regression, to which (sklearn one) it is compared at the end of the training (i.e. the accuracy on the validation set is printed out to screen).
 The training will also save the loss vs epoch time under the training_Loss.h5 file in the data/model folder.
 
-Once a model is available in the data/model folder, an interactive console can be launched by typing:
+By default, a model is available in the data/model folder, so an interactive console can be launched __without need of training__ by typing:
 ```
 cd Sentiment_Analysis/model_nn/
 python NLP_prediction.py
