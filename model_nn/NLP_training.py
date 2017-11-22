@@ -438,6 +438,4 @@ if __name__ == "__main__":
     Addresses the 'Amazon Reviews for Sentiment Analysis' problem, see:
         https://www.kaggle.com/bittlingmayer/amazonreviews
     '''
-   
-    ''' Defining the parameters for the model '''
     main()    
